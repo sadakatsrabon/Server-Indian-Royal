@@ -26,13 +26,31 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-        // Load Data from MongoDB
+        // Data from MongoDB
         const menuData = client.db("indianRoyalDB").collection("menu");
+        const reviewData = client.db("indianRoyalDB").collection("reviews");
+        const cartCollection = client.db("indianRoyalDB").collection("carts");
 
-        app.get('/menu', async(req, res) =>{
+        // Load Menu Data
+        app.get('/menu', async (req, res) => {
             const result = await menuData.find().toArray();
             res.send(result);
-        })
+        });
+
+        // Load Reviews/Testemonials Data
+        app.get('/reviews', async (req, res) => {
+            const result = await reviewData.find().toArray();
+            res.send(result);
+        });
+
+        // Post Carts Collection
+        app.post('/carts', async (req, res) => {
+            const item = req.body;
+            console.log(item);
+            const result = await cartCollection.insertOne(item);
+            res.send(result);
+        });
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
@@ -49,7 +67,7 @@ app.get('/', (req, res) => {
     res.send('Welcom to Indian Royal');
 });
 
-// Listen Data
+// Listening confirmation
 app.listen(port, () => {
     console.log(`Indian Royal Resturent's server is running on port ${port}`);
 });
