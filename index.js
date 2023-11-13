@@ -26,7 +26,7 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-        // Data from MongoDB
+        // Data from MongoDB(Database)
         const usersCollection = client.db("indianRoyalDB").collection("users");
         const menuCollection = client.db("indianRoyalDB").collection("menu");
         const reviewCollection = client.db("indianRoyalDB").collection("reviews");
@@ -35,6 +35,12 @@ async function run() {
         // Users Apis
         app.post('/users', async (req, res) => {
             const user = req.body;
+            console.log(user);
+            const query = { email: user.email };
+            const existingUser = await usersCollection.findOne(query);
+            if (existingUser) {
+                return res.send({ message: 'User Already Exists' })
+            }
             const result = await usersCollection.insertOne(user);
             res.send(result);
         })
@@ -62,6 +68,7 @@ async function run() {
             const result = await cartCollection.find(query).toArray();
             res.send(result);
         })
+
         // Post Carts Collection    
         app.post('/carts', async (req, res) => {
             const item = req.body;
