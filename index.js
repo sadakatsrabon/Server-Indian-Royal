@@ -27,19 +27,27 @@ async function run() {
         await client.connect();
 
         // Data from MongoDB
-        const menuData = client.db("indianRoyalDB").collection("menu");
-        const reviewData = client.db("indianRoyalDB").collection("reviews");
+        const usersCollection = client.db("indianRoyalDB").collection("users");
+        const menuCollection = client.db("indianRoyalDB").collection("menu");
+        const reviewCollection = client.db("indianRoyalDB").collection("reviews");
         const cartCollection = client.db("indianRoyalDB").collection("carts");
 
-        // Load Menu Data
+        // Users Apis
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const result = await usersCollection.insertOne(user);
+            res.send(result);
+        })
+
+        // Load Menu Api Data
         app.get('/menu', async (req, res) => {
-            const result = await menuData.find().toArray();
+            const result = await menuCollection.find().toArray();
             res.send(result);
         });
 
-        // Load Reviews/Testemonials Data
+        // Load Reviews/Testemonials Api Data
         app.get('/reviews', async (req, res) => {
-            const result = await reviewData.find().toArray();
+            const result = await reviewCollection.find().toArray();
             res.send(result);
         });
 
