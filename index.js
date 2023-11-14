@@ -34,6 +34,8 @@ async function run() {
 
         // Users Apis
 
+
+
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result);
@@ -49,6 +51,22 @@ async function run() {
             }
             const result = await usersCollection.insertOne(user);
             res.send(result);
+        })
+
+        // Add/Remove Admin-user
+        app.patch('/users/admin/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id)
+            const filter = { _id: new ObjectId(id) }; //Filter a user
+            const updateDoc = {
+                $set: {
+                    role: 'admin'
+                },
+            };
+
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            res.send(result);
+
         })
 
         // Load Menu Api Data
