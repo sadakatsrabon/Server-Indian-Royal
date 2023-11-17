@@ -10,6 +10,24 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(cors());
 app.use(express.json());
 
+// jwt verify
+const verifyJWT = (req, res, next) => {
+    const authorization = req.headers.authorization;
+    if (!authorization) {
+        return res.status(401).send({ error: true, message: 'unauthorize access' });
+    }
+    const token = authorization.split(' ')[1];
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ error: true, message: 'unauthorize access' })
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
+
+
 // Connect with MongoDB.
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@s-cluster0.pvehgyn.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -32,18 +50,13 @@ async function run() {
         const menuCollection = client.db("indianRoyalDB").collection("menu");
         const reviewCollection = client.db("indianRoyalDB").collection("reviews");
         const cartCollection = client.db("indianRoyalDB").collection("carts");
-        // 
-        // 
+
+        //  Jwt post apis
         app.post('/jwt', (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '24h' })
             res.send({ token })
         })
-        // 
-        // 
-
-
-
 
         // JWT Code
         app.post('/jwt', (req, res) => {
@@ -67,6 +80,17 @@ async function run() {
                 return res.send({ message: 'User Already Exists' })
             }
             const result = await usersCollection.insertOne(user);
+            res.send(result);
+        })
+
+        // check admin
+        // need to 'verifyJWT'. it is mising
+        // app.get('/users/admin/:email',verifyJwt async (req, res) => {
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const user = await usersCollection.findOne(query);
+            const result = { admin: user?.role === 'admin' }
             res.send(result);
         })
 
@@ -100,11 +124,17 @@ async function run() {
 
 
         // Cart Collection API
-        app.get('/carts', async (req, res) => {
+        app.get('/carts',verifyJWT, async (req, res) => {
             const email = req.query.email;
             if (!email) {
                 res.send([]);
             }
+
+            const decodedEmail = req.decoded.email;
+            if(email !== decodedEmail){
+                return res.status(403).send({error: true, message: 'firbidden access'})
+            }
+
             const query = { email: email };
             const result = await cartCollection.find(query).toArray();
             res.send(result);
