@@ -54,16 +54,16 @@ async function run() {
         //  Jwt post apis
         app.post('/jwt', (req, res) => {
             const user = req.body;
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '24h' })
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
             res.send({ token })
         })
 
         // JWT Code
-        app.post('/jwt', (req, res) => {
-            const user = req.body;
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
-            res.send({ token })
-        })
+        // app.post('/jwt', (req, res) => {
+        //     const user = req.body;
+        //     const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+        //     res.send({ token })
+        // })
 
         // Users Apis
         app.get('/users', async (req, res) => {
@@ -83,11 +83,14 @@ async function run() {
             res.send(result);
         })
 
-        // check admin
-        // need to 'verifyJWT'. it is mising
-        // app.get('/users/admin/:email',verifyJwt async (req, res) => {
-        app.get('/users/admin/:email', async (req, res) => {
+        // check admin (verifyJWT is the first step of security)
+        app.get('/users/admin/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
+            // and this the second level of security is same Email
+            if (req.decoded.email !== email) {
+                res.send({ admin: false })
+            }
+
             const query = { email: email }
             const user = await usersCollection.findOne(query);
             const result = { admin: user?.role === 'admin' }
@@ -124,15 +127,15 @@ async function run() {
 
 
         // Cart Collection API
-        app.get('/carts',verifyJWT, async (req, res) => {
+        app.get('/carts', verifyJWT, async (req, res) => {
             const email = req.query.email;
             if (!email) {
                 res.send([]);
             }
 
             const decodedEmail = req.decoded.email;
-            if(email !== decodedEmail){
-                return res.status(403).send({error: true, message: 'firbidden access'})
+            if (email !== decodedEmail) {
+                return res.status(403).send({ error: true, message: 'firbidden access' })
             }
 
             const query = { email: email };
