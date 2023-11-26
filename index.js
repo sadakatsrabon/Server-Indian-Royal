@@ -70,7 +70,7 @@ async function run() {
             const user = await usersCollection.findOne(query);
 
             if (user?.role !== 'admin') {
-                return res.status(403).send({ error: true, message: 'User is not an admin' });
+                return res.status(403).send({ error: true, message: 'user is not an admin' });
             }
             next();
         }
