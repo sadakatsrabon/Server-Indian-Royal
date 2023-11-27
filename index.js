@@ -58,6 +58,7 @@ async function run() {
             res.send({ token })
         })
 
+        // ADMIN MIDDLEWARE
 
         // add this middleWear after mongoDb connection. 
         // warning: use verifyJwt befor verifyAdmin
@@ -75,13 +76,14 @@ async function run() {
             next();
         }
 
+        // USERS
 
         // Users Apis
         app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result);
         })
-
+        // post user
         app.post('/users', async (req, res) => {
             const user = req.body;
             console.log(user);
@@ -93,6 +95,9 @@ async function run() {
             const result = await usersCollection.insertOne(user);
             res.send(result);
         })
+
+
+        // ADMIN
 
         // check admin (verifyJWT is the first step of security)
         app.get('/users/admin/:email', verifyJWT, async (req, res) => {
@@ -124,17 +129,31 @@ async function run() {
 
         })
 
+        // MENU
+
         // Load Menu Api Data
         app.get('/menu', async (req, res) => {
             const result = await menuCollection.find().toArray();
             res.send(result);
         });
 
+        // post menu item
         app.post('/menu', verifyJWT, verifyAdmin, async (req, res) => {
             const newItem = req.body;
             const result = await menuCollection.insertOne(newItem);
             res.send(result);
         })
+
+        // Delete menu
+        app.delete('/menu/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await menuCollection.deleteOne(query);
+            res.send(result);
+        })
+
+
+        // REVIEWS
 
         // Load Reviews/Testemonials Api Data
         app.get('/reviews', async (req, res) => {
