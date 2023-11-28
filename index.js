@@ -198,13 +198,11 @@ async function run() {
             res.send(result);
         })
 
+        // ----------- PAYMENT SECTION -------------
         // Create Payment Intent
         app.post('/create-paymetn-intent', verifyJWT, async (req, res) => {
-            // const body = req.body;
             const { price } = req.body;
             const amount = price * 100;
-            // console.log('Price:', price);
-            // console.log('Amount:', amount);
             const paymentIntent = await stripe.paymentIntents.create({
                 amount: amount,
                 currency: 'usd',
@@ -217,12 +215,15 @@ async function run() {
         });
 
 
-        // ----------- PAYMENT SECTION -------------
         // Store transectionId to database
         app.post('/paymens', verifyJWT, async (req, res) => {
             const payment = req.body;
-            const result = await paymentCollection.insertOne(payment);
-            res.send(result);
+            const insertResult = await paymentCollection.insertOne(payment);
+
+            const query = { _id: { $in: payment.cartItems.map(id => new ObjectId(id)) } }
+            const deleteResult = await cartCollection.deleteMany(query);
+
+            res.send({ insertResult, deleteResult });
         })
 
         // Send a ping to confirm a successful connection
