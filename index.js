@@ -52,6 +52,7 @@ async function run() {
         const menuCollection = client.db("indianRoyalDB").collection("menu");
         const reviewCollection = client.db("indianRoyalDB").collection("reviews");
         const cartCollection = client.db("indianRoyalDB").collection("carts");
+        const paymentCollection = client.db("indianRoyalDB").collection("payments");
 
         //  Jwt post apis
         app.post('/jwt', (req, res) => {
@@ -198,19 +199,25 @@ async function run() {
         })
 
         // Create Payment Intent
-        app.post('/create-paymetn-intent', async (req, res) => {
+        app.post('/create-paymetn-intent', verifyJWT, async (req, res) => {
+            // const body = req.body;
             const { price } = req.body;
             const amount = price * 100;
-            const paymentIntent = await paymentIntents.create({
-
+            // console.log('Price:', price);
+            // console.log('Amount:', amount);
+            const paymentIntent = await stripe.paymentIntents.create({
                 amount: amount,
                 currency: 'usd',
                 payment_method_types: ['card']
-            })
+            });
+
             res.send({
                 clientSecret: paymentIntent.client_secret
             })
-        })
+        });
+
+
+        // Store transectionId to database
 
 
         // Send a ping to confirm a successful connection
