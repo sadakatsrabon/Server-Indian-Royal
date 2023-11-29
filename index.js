@@ -226,6 +226,24 @@ async function run() {
             res.send({ insertResult, deleteResult });
         })
 
+        // Admin
+        app.get('/admin-chart', verifyJWT, verifyAdmin, async (req, res) => {
+            // NOTE: countDocument & estimatedDocumentCount is same but 2nd is faster;
+            const users = await usersCollection.countDocuments();
+            const foodProducts = await menuCollection.estimatedDocumentCount();
+            const orders = await paymentCollection.estimatedDocumentCount();
+
+            const payments = await paymentCollection.find().toArray();
+            const revenue = payments.reduce((sum, payment) => sum + payment.price, 0);
+
+            res.send({
+                users,
+                foodProducts,
+                orders,
+                revenue
+            })
+        })
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
