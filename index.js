@@ -203,82 +203,103 @@ async function run() {
         app.post('/create-paymetn-intent', verifyJWT, async (req, res) => {
             const { price } = req.body;
             const amount = parseInt(price * 100)
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount,
-            currency: 'usd',
-            payment_method_types: ['card']
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
         });
 
-        res.send({
-            clientSecret: paymentIntent.client_secret
+
+        // Store transectionId to database
+        app.post('/paymens', verifyJWT, async (req, res) => {
+            const payment = req.body;
+            const insertResult = await paymentCollection.insertOne(payment);
+
+            const query = { _id: { $in: payment.cartItems.map(id => new ObjectId(id)) } }
+            const deleteResult = await cartCollection.deleteMany(query);
+
+            res.send({ insertResult, deleteResult });
         })
-    });
 
+        // ADMIN HOME
+        app.get('/admin-chart', verifyJWT, verifyAdmin, async (req, res) => {
+            // NOTE: countDocument & estimatedDocumentCount is same but 2nd is faster;
+            const users = await usersCollection.countDocuments();
+            const foodProducts = await menuCollection.estimatedDocumentCount();
+            const orders = await paymentCollection.estimatedDocumentCount();
 
-    // Store transectionId to database
-    app.post('/paymens', verifyJWT, async (req, res) => {
-        const payment = req.body;
-        const insertResult = await paymentCollection.insertOne(payment);
+            const payments = await paymentCollection.find().toArray();
+            const revenue = payments.reduce((sum, payment) => sum + payment.price, 0);
 
-        const query = { _id: { $in: payment.cartItems.map(id => new ObjectId(id)) } }
-        const deleteResult = await cartCollection.deleteMany(query);
-
-        res.send({ insertResult, deleteResult });
-    })
-
-    // Admin
-    app.get('/admin-chart', verifyJWT, verifyAdmin, async (req, res) => {
-        // NOTE: countDocument & estimatedDocumentCount is same but 2nd is faster;
-        const users = await usersCollection.countDocuments();
-        const foodProducts = await menuCollection.estimatedDocumentCount();
-        const orders = await paymentCollection.estimatedDocumentCount();
-
-        const payments = await paymentCollection.find().toArray();
-        const revenue = payments.reduce((sum, payment) => sum + payment.price, 0);
-
-        res.send({
-            users,
-            foodProducts,
-            orders,
-            revenue
+            res.send({
+                users,
+                foodProducts,
+                orders,
+                revenue
+            })
         })
-    })
 
-    // app.get('/order-status', async (req, res) => {
-    //     const pipeLine = [
-    //         {
-    //             $lookup: {
-    //                 from: 'menu',
-    //                 localField: 'menu',
-    //                 foreignField: '_id',
-    //                 as: 'menuData'
-    //             }
-    //         },
+        // app.get('/order-status', async (req, res) => {
+        //     const pipeLine = [
+        //         {
+        //             $lookup: {
+        //                 from: 'menu',
+        //                 localField: 'menu',
+        //                 foreignField: '_id',
+        //                 as: 'menuData'
+        //             }
+        //         },
 
-    //         {
-    //             $unwind: '$menuData'
-    //         },
-    //         {
-    //             $group: {
-    //                 _id: '$menuData.category',
-    //                 count: { $sum: 1 },
-    //                 totalPrice: { $sum: '$menuData.price' }
-    //             }
-    //         }
+        //         {
+        //             $unwind: '$menuData'
+        //         },
+        //         {
+        //             $group: {
+        //                 _id: '$menuData.category',
+        //                 count: { $sum: 1 },
+        //                 totalPrice: { $sum: '$menuData.price' }
+        //             }
+        //         }
 
-    //     ]
-    //     const result = await paymentCollection.aggregate(pipeLine).toArray();
-    //     console.log(result); // Log the result to the console
-    //     res.send(result);
-    // })
+        //     ]
+        //     const result = await paymentCollection.aggregate(pipeLine).toArray();
+        //     console.log(result); // Log the result to the console
+        //     res.send(result);
+        // })
 
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-} finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-}
+
+
+        // USERS HOME-
+        app.get('/user-chart', async (req, res) => {
+
+            // const email = req.query.email;
+            // if (!email) {
+            //     res.send([]);
+            // }
+            // const decodedEmail = req.decoded.email;
+            // if (email !== decodedEmail) {
+            //     return res.status(403).send({ error: true, message: 'firbidden access' })
+            // }
+            // const query = { email: email };
+            // const result = await paymentCollection.find(query).toArray();
+
+            const userPayment = await paymentCollection.estimatedDocumentCount();
+            res.send({ userPayment });
+        })
+
+
+        // Send a ping to confirm a successful connection
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    } finally {
+        // Ensures that the client will close when you finish/error
+        // await client.close();
+    }
 }
 run().catch(console.dir);
 
