@@ -48,16 +48,16 @@ async function run() {
         await client.connect();
 
         // Data from MongoDB(Database)
-        const usersCollection = client.db("indianRoyalDB").collection("users");
         const menuCollection = client.db("indianRoyalDB").collection("menu");
-        const reviewCollection = client.db("indianRoyalDB").collection("reviews");
         const cartCollection = client.db("indianRoyalDB").collection("carts");
+        const usersCollection = client.db("indianRoyalDB").collection("users");
+        const reviewCollection = client.db("indianRoyalDB").collection("reviews");
         const paymentCollection = client.db("indianRoyalDB").collection("payments");
 
         //  Jwt post apis
         app.post('/jwt', (req, res) => {
             const user = req.body;
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
             res.send({ token })
         })
 
@@ -244,52 +244,11 @@ async function run() {
             })
         })
 
-        // app.get('/order-status', async (req, res) => {
-        //     const pipeLine = [
-        //         {
-        //             $lookup: {
-        //                 from: 'menu',
-        //                 localField: 'menu',
-        //                 foreignField: '_id',
-        //                 as: 'menuData'
-        //             }
-        //         },
-
-        //         {
-        //             $unwind: '$menuData'
-        //         },
-        //         {
-        //             $group: {
-        //                 _id: '$menuData.category',
-        //                 count: { $sum: 1 },
-        //                 totalPrice: { $sum: '$menuData.price' }
-        //             }
-        //         }
-
-        //     ]
-        //     const result = await paymentCollection.aggregate(pipeLine).toArray();
-        //     console.log(result); // Log the result to the console
-        //     res.send(result);
-        // })
-
-
 
         // USERS HOME-
         app.get('/user-chart', async (req, res) => {
 
-            // const email = req.query.email;
-            // if (!email) {
-            //     res.send([]);
-            // }
-            // const decodedEmail = req.decoded.email;
-            // if (email !== decodedEmail) {
-            //     return res.status(403).send({ error: true, message: 'firbidden access' })
-            // }
-            // const query = { email: email };
-            // const result = await paymentCollection.find(query).toArray();
-
-            const userPayment = await paymentCollection.estimatedDocumentCount();
-            res.send({ userPayment });
+            // toDo: users home
         })
 
 
