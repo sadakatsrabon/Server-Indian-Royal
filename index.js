@@ -135,7 +135,7 @@ async function run() {
         // MENU
 
         // Load Menu Api Data
-        app.get('/menu', async (req, res) => {
+        app.get("/menu", async (req, res) => {
             const result = await menuCollection.find().toArray();
             res.send(result);
         });
