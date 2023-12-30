@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 // middlewar 
