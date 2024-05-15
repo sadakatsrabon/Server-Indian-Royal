@@ -33,6 +33,10 @@ async function run() {
         // Databse
         return client.db("indianRoyalDB").collection('menu');
     }
+    catch (error) {
+        console.log("Sorry for a uncaught error ;", error);
+        throw error;
+    }
     finally {
         // Ensures that the client will close when you finish/error
         await client.close();
