@@ -28,6 +28,15 @@ async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
+
+        // Databse
+        const menuData = client.db("indianRoyalDB").collection('menu');
+
+        app.get('/menu',async (req, res)=> {
+            const menu = menuData.find().toArray();
+            res.send(menu);
+        })
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -42,6 +51,7 @@ run().catch(console.dir);
 app.get('/', async (req, res) => {
     res.send(`String to check from port ${port}`);
 });
+
 
 // Listen Code
 app.listen(port, () => {
