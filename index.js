@@ -61,7 +61,7 @@ app.get('/menu', async (req, res) => {
     }
 });
 
-app.get('review', async (req, res) => {
+app.get('/review', async (req, res) => {
     try {
         const dbClient = await dbClientPromise;
         const reviewCollection = dbClient.db("indianRoyalDB").collection('reviews');
@@ -69,7 +69,7 @@ app.get('review', async (req, res) => {
         res.send(result);
     } catch (error) {
         console.log("Sorry bosss, There was a problem to load review data from mongoDB", error);
-        res.status(500).send("Internal server error for reviewCollections")
+        res.status(500).send("Internal server error for reviewCollections");
     }
 })
 
